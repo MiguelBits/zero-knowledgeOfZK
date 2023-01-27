@@ -26,6 +26,13 @@ contract BridgeEthScript is Script {
     uint processingFee = 0;
     address refundAddress = USER;
     string memo = "testing bridgooooor";
+
+
+    function run() public {
+        testBridging();
+        //testBridgeClaim();
+    }
+
     function testBridging() public {
 
         vm.startBroadcast();
@@ -39,7 +46,7 @@ contract BridgeEthScript is Script {
             uint _amount = 1000 ether;
 
             //mint some tokens
-            testERC20.mint(address(this), _amount);
+            testERC20.mint(USER, _amount);
 
             //approve the bridged ERC20 token to spend our tokens
             testERC20.approve(address(bridgedERC20), _amount);
