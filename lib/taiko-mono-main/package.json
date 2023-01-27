@@ -1,0 +1,11 @@
+{
+  "name": "taiko-mono",
+  "version": "0.4.0",
+  "private": true,
+  "scripts": {
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "husky": "^8.0.3"
+  }
+}

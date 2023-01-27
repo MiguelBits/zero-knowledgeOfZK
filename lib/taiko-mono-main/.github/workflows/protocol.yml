@@ -1,0 +1,86 @@
+name: Protocol
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/protocol/**"
+  pull_request:
+    paths:
+      - "packages/protocol/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.11.0
+        with:
+          access_token: ${{ github.token }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install pnpm dependencies
+        uses: ./.github/actions/install-pnpm-dependencies
+
+      - name: protocol - Unit Tests
+        working-directory: ./packages/protocol
+        run: pnpm clean && pnpm test
+
+      - name: protocol - Integration Tests
+        working-directory: ./packages/protocol
+        run: pnpm test:integration
+
+      # - name: protocol - Tokenomics Tests
+      #   working-directory: ./packages/protocol
+      #   run: pnpm test:tokenomics
+
+      - name: protocol - Test Coverage
+        working-directory: ./packages/protocol
+        run: pnpm test:coverage
+
+      - name: protocol - Generate Genesis
+        working-directory: ./packages/protocol
+        run: pnpm test:genesis
+
+      - name: protocol - Export ABIs
+        working-directory: ./packages/protocol
+        run: pnpm export:abi
+
+      - name: protocol - Deploy L1 Contracts
+        working-directory: ./packages/protocol
+        run: pnpm deploy:hardhat
+
+      - name: protocol - Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          directory: ./packages/protocol/coverage
+          flags: protocol
+
+  post-merge:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up protocol
+        uses: ./.github/actions/set-up-protocol
+
+      - name: Run the command to update the documentation
+        run: pnpm -F protocol export:docs
+
+      - name: Stage all modified and untracked files
+        run: git add .
+
+      - name: Exit if there are no changes
+        run: git diff --exit-code --cached
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          title: "docs(protocol): auto-update protocol documentation"
+          commit-message: "docs(protocol): auto-update protocol documentation"
+          branch: update-docs-${{ github.sha }}
+          delete-branch: true
